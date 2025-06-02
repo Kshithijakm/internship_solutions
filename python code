@@ -1,0 +1,71 @@
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+df = pd.read_csv('ai_dev_productivity.csv')
+
+df.dropna(inplace=True)
+
+Q1 = df.quantile(0.25)
+Q3 = df.quantile(0.75)
+IQR = Q3 - Q1
+df = df[~((df < (Q1 - 1.5 * IQR)) | (df > (Q3 + 1.5 * IQR))).any(axis=1)]
+
+df['task_success'] = df['task_success'].astype(int)
+
+
+df['productivity_ratio'] = df['commits'] / (df['hours_coding'] + 1)
+
+
+print("Cleaned Dataset Info:")
+print(df.info())
+print("\nSummary Statistics:")
+print(df.describe())
+
+
+sns.set(style="whitegrid")
+plt.figure(figsize=(16, 12))
+
+
+plt.subplot(2, 2, 1)
+sns.heatmap(df.corr(), annot=True, fmt=".2f", cmap="coolwarm", linewidths=0.5)
+plt.title("Correlation Heatmap")
+
+
+plt.subplot(2, 2, 2)
+sns.boxplot(data=df, x="task_success", y="ai_usage_hours", palette="Set2")
+plt.title("AI Usage vs Task Success")
+plt.xlabel("Task Success (1 = Success, 0 = Failure)")
+plt.ylabel("AI Usage Hours")
+
+
+plt.subplot(2, 2, 3)
+sns.scatterplot(
+    data=df,
+    x="sleep_hours",
+    y="cognitive_load",
+    hue="task_success",
+    palette="coolwarm",
+    alpha=0.7
+)
+plt.title("Cognitive Load vs Sleep Hours by Task Success")
+plt.xlabel("Sleep Hours")
+plt.ylabel("Cognitive Load")
+
+
+plt.subplot(2, 2, 4)
+sns.scatterplot(
+    data=df,
+    x="ai_usage_hours",
+    y="productivity_ratio",
+    hue="task_success",
+    palette="Set1",
+    alpha=0.7
+)
+plt.title("Productivity Ratio vs AI Usage by Task Success")
+plt.xlabel("AI Usage Hours")
+plt.ylabel("Productivity Ratio (Commits / Hours)")
+
+plt.tight_layout()
+plt.show()
